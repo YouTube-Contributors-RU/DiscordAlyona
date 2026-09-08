@@ -1,5 +1,6 @@
-﻿using Bot.Interfaces.Logger;
+﻿using Bot.Models.Logger;
 using Bot.Utils.Logger;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace Bot.Utils.Json
@@ -11,9 +12,7 @@ namespace Bot.Utils.Json
     /// <typeparam name="T">The class you will be working with in the file.</typeparam>
     public class JFileManager<T> where T : class
     {
-        private readonly ILogger? Logger;
-        private readonly int LoggerApplicationId;
-        private readonly LogDestination LoggerLogDestination;
+        private readonly LoggerApplicationSettings? LoggerApplicationSettings;
 
         private readonly string FullPathToJsonFile;
 
@@ -21,17 +20,13 @@ namespace Bot.Utils.Json
         /// <summary>
         /// <see cref="JFileManager{T}">JFileManager</see> constructor.
         /// </summary>
-        /// <param name="JsonFile">Path to the Json file you are working with.</param>
-        /// <param name="logger">Implemented <see cref="ILogger">logger</see> class.</param>
-        /// <param name="loggerApplicationId">Application ID.</param>
-        /// <param name="logDestination">Logging output type. (<see cref="LogDestination">LogDestination</see>)</param>
-        public JFileManager(string JsonFile, ILogger? logger = null, int loggerApplicationId = -1, LogDestination logDestination = LogDestination.Both)
+        /// <param name="jsonFile">Path to the Json file you are working with.</param>
+        /// <param name="applicationSettings">Logger settings for the application.</param>
+        public JFileManager(string jsonFile, LoggerApplicationSettings? applicationSettings)
         {
-            FullPathToJsonFile = GetFullPathToJsonFile(JsonFile);
+            FullPathToJsonFile = GetFullPathToJsonFile(jsonFile);
 
-            Logger = logger;
-            LoggerApplicationId = loggerApplicationId;
-            LoggerLogDestination = logDestination;
+            LoggerApplicationSettings = applicationSettings;
 
             InitDirectory(FullPathToJsonFile);
         }
@@ -66,6 +61,12 @@ namespace Bot.Utils.Json
         {
             try
             {
+                if (!File.Exists(FullPathToJsonFile))
+                {
+                    Log(LogLevel.Error, $"The file `{FullPathToJsonFile}` was not found.");
+                    return null;
+                }
+
                 string data = File.ReadAllText(FullPathToJsonFile);
                 T? deserializedJsonData = JsonSerializer.Deserialize<T>(data);
                 Log(LogLevel.Debug, $"Data from file `{FullPathToJsonFile}` was successfully retrieved!");
@@ -125,12 +126,15 @@ namespace Bot.Utils.Json
         /// </summary>
         /// <param name="logLevel">Logging level.</param>
         /// <param name="message">Message.</param>
-        private void Log(LogLevel logLevel, string message)
+        /// <param name="callerName">The method that called the log.</param>
+        private void Log(LogLevel logLevel, string message, [CallerMemberName] string callerName = "undefined")
         {
-            if (Logger == null)
+            if (LoggerApplicationSettings == null)
                 return;
 
-            Logger.Log(LoggerApplicationId, logLevel, message, LoggerLogDestination);
+            var _logger = LoggerApplicationSettings.Logger;
+
+            _logger.Log(LoggerApplicationSettings.ApplicationId, logLevel, message, LoggerApplicationSettings.LogDestination, callerName);
         }
         #endregion
     }

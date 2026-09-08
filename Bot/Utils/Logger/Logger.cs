@@ -1,5 +1,5 @@
 ﻿using Bot.Interfaces.Logger;
-using Bot.Models;
+using Bot.Models.Logger;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
@@ -31,16 +31,17 @@ namespace Bot.Utils.Logger
         /// <exception cref="ArgumentException">The exception that is thrown if the specified application ID does not exist.</exception>
         public void Log(int id, LogLevel logLevel, string message, LogDestination logDestination = LogDestination.Both, [CallerMemberName] string callerName = "undefined")
         {
-            if (!_applications.TryGetValue(id, out var model))
-                throw new ArgumentException($"The application with ID `{id}` was not registered.");
+            LoggerApplication? applicationModel;
+            if (!_applications.TryGetValue(id, out applicationModel))
+                applicationModel = new() { Name = "undefined", FileName = "logs/undefined.log", Description = "The logger does not have an application configured with the specified ID." };
 
-            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel,-5}] [{callerName}] [{model.Name}] {message}";
+            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel,-5}] [{callerName}] [{applicationModel.Name}] {message}";
 
             if (logDestination is LogDestination.Console or LogDestination.Both)
                 WriteToConsole(logLevel, formattedMessage);
 
             if (logDestination is LogDestination.File or LogDestination.Both)
-                WriteToFile(model.FileName, formattedMessage);
+                WriteToFile(applicationModel.FileName, formattedMessage);
         }
         #endregion
 

@@ -1,4 +1,4 @@
-﻿using Bot.Models;
+﻿using Bot.Models.Logger;
 using Bot.Utils.Logger;
 
 namespace Bot
@@ -7,12 +7,10 @@ namespace Bot
     {
         internal static async Task Launch(string[] args)
         {
-            Console.WriteLine("Point");
-            Dictionary<int, LoggerApplication> model = [ ];
-            model.Add(0, new("Main", "main.log", "That's desc"));
-            Logger logger = new Logger(model);
-            logger.Log(0, LogLevel.Info, "Hi!");
+            Dictionary<int, LoggerApplication> loggerApplicationsModels = [ ]; // Добавить Id для настроек, токенов и jfilemanager
 
+            // Реализовать консольные аргументы (команды) для сохранения токенов.
+            
             Console.ReadLine();
             await Task.CompletedTask;
         }

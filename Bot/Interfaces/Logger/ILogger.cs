@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Bot.Interfaces.Logger
 {
+    #region INTERFACE | ILogger
     /// <summary>
     /// This is the logger interface. Indeed.
     /// </summary>
@@ -18,4 +19,5 @@ namespace Bot.Interfaces.Logger
         /// <param name="callerName">The method that called the log.</param>
         void Log(int id, LogLevel logLevel, string message, LogDestination logDestination, [CallerMemberName] string callerName = "undefined");
     }
+    #endregion
 }
