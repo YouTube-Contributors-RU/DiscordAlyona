@@ -1,61 +1,65 @@
 name: .NET Cross-Platform Build & Publish
 
-# ИИ слопчик
-
 on:
   workflow_dispatch:
     inputs:
       channel:
-        description: 'Канал публикации (Release или Canary)'
+        description: 'Build channel'
         required: true
         default: 'canary'
         type: choice
         options:
           - release
           - canary
-          
   schedule:
     - cron: '0 0 * * *'
+
+permissions:
+  contents: write
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      should_run: ${{ steps.check_changes.outputs.should_run }}
-      channel: ${{ steps.set_channel.outputs.channel }}
+      should_run: ${{ steps.setup.outputs.should_run }}
+      channel: ${{ steps.setup.outputs.channel }}
+      configs: ${{ steps.setup.outputs.configs }}
+      tag: ${{ steps.setup.outputs.tag }}
+      is_prerelease: ${{ steps.setup.outputs.is_prerelease }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Проверка изменений за последние 24 часа
-        id: check_changes
+      - id: setup
         run: |
+          SHOULD_RUN="true"
           if [ "${{ github.event_name }}" == "schedule" ]; then
-            # Проверяем, были ли коммиты за последние 24 часа
             CHANGES=$(git log --oneline --since="24 hours ago")
             if [ -z "$CHANGES" ]; then
-              echo "Изменений не найдено. Сборка отменяется."
-              echo "should_run=false" >> $GITHUB_OUTPUT
-            else
-              echo "Найдены изменения. Запуск сборки."
-              echo "should_run=true" >> $GITHUB_OUTPUT
+              SHOULD_RUN="false"
             fi
+            CHANNEL="canary"
           else
-            # Для ручного запуска всегда выполняем сборку
-            echo "should_run=true" >> $GITHUB_OUTPUT
+            CHANNEL="${{ github.event.inputs.channel }}"
           fi
 
-      - name: Установка канала сборки (Channel)
-        id: set_channel
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "channel=${{ github.event.inputs.channel }}" >> $GITHUB_OUTPUT
+          DATE=$(date +'%Y.%m.%d')
+          if [ "$CHANNEL" == "release" ]; then
+            CONFIGS='["Release"]'
+            PRERELEASE="false"
+            TAG="v$DATE-${{ github.run_number }}"
           else
-            # Автоматические ночные сборки всегда считаем canary (пре-релиз)
-            echo "channel=canary" >> $GITHUB_OUTPUT
+            CONFIGS='["Debug", "Release"]'
+            PRERELEASE="true"
+            TAG="canary-$DATE-${{ github.run_number }}"
           fi
+
+          echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "configs=$CONFIGS" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
@@ -63,7 +67,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        configuration: [Debug, Release]
+        configuration: ${{ fromJson(needs.prepare.outputs.configs) }}
         include:
           - os: ubuntu-latest
             rid: linux-x64
@@ -71,29 +75,46 @@ jobs:
             rid: win-x64
           - os: macos-latest
             rid: osx-x64
-            
     runs-on: ${{ matrix.os }}
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Установка .NET SDK
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x' 
 
-      - name: Восстановление зависимостей
-        run: dotnet restore
+      - run: dotnet restore
 
-      - name: Компиляция (Build)
-        run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+      - run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
 
-      - name: Публикация (Publish)
-        run: dotnet publish --configuration ${{ matrix.configuration }} -r ${{ matrix.rid }} --self-contained false -o ./publish_output
+      - run: dotnet publish --configuration ${{ matrix.configuration }} -r ${{ matrix.rid }} --self-contained false -o ./publish_output
 
-      - name: Загрузка артефактов (Artifacts)
-        uses: actions/upload-artifact@v4
+      - if: matrix.os != 'windows-latest'
+        run: cd ./publish_output && zip -r ../App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip .
+
+      - if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path .\publish_output\* -DestinationPath .\App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+        shell: powershell
+
+      - uses: actions/upload-artifact@v4
         with:
           name: App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}
-          path: ./publish_output
+          path: ./App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+          retention-days: 1
+
+  publish_release:
+    needs: [prepare, build]
+    if: ${{ needs.prepare.outputs.should_run == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Release ${{ needs.prepare.outputs.tag }}
+          prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
+          files: ./artifacts/**/*.zip
