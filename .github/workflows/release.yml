@@ -91,10 +91,10 @@ jobs:
       - run: dotnet publish --configuration ${{ matrix.configuration }} -r ${{ matrix.rid }} --self-contained false -o ./publish_output
 
       - if: matrix.os != 'windows-latest'
-        run: cd ./publish_output && zip -r ../App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip .
+        run: cd ./publish_output && zip -r ../AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip .
 
       - if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path .\publish_output\* -DestinationPath .\App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+        run: Compress-Archive -Path .\publish_output\* -DestinationPath .\AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
         shell: powershell
 
       - uses: actions/upload-artifact@v4
