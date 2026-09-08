@@ -1,2 +1,4 @@
 # DiscordBot
-DiscordBot - это Discord-бот созданный для русскоязычного сообщества YouTube в Discord (YouTube Contributors RU)
+DiscordBot is a Discord bot project created for the Russian-speaking YouTube Discord community (YouTube Contributors RU).
+
+Some day...
