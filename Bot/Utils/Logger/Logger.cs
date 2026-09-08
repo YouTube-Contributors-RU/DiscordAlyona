@@ -1,28 +1,54 @@
-﻿using Bot.Models;
+﻿using Bot.Interfaces.Logger;
+using Bot.Models;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace Bot.Utils.Logger
 {
-    public class Logger(IDictionary<int, LoggerApplication> models)
+    #region Class | Logger
+    // Logger. Contains instructions for writing logs to the console and/or to a file.
+    // This is an implementation of the ILogger interface. Where it is, though... I have no idea.
+
+    /// <summary>
+    /// <see cref="Logger">Logger</see> class constructor.
+    /// This is an implementation of the <see cref="ILogger">ILogger</see> interface. Where it is, though... I have no idea.
+    /// </summary>
+    /// <param name="applications">Dictionary with index and application model.</param>
+    public class Logger(IDictionary<int, LoggerApplication> applications) : ILogger
     {
-        private readonly IReadOnlyDictionary<int, LoggerApplication> _models = new Dictionary<int, LoggerApplication>(models);
+        private readonly IReadOnlyDictionary<int, LoggerApplication> _applications = new Dictionary<int, LoggerApplication>(applications);
         private readonly ConcurrentDictionary<string, object> _fileLocks = new ConcurrentDictionary<string, object>();
 
+        #region METHOD-VOID | Log
+        /// <summary>
+        /// Write log to console and/or file.
+        /// </summary>
+        /// <param name="id">Application ID.</param>
+        /// <param name="logLevel">Log level.</param>
+        /// <param name="message">Message.</param>
+        /// <param name="logDestination">Log saving locations.</param>
+        /// <param name="callerName">The method that called the log.</param>
+        /// <exception cref="ArgumentException">The exception that is thrown if the specified application ID does not exist.</exception>
         public void Log(int id, LogLevel logLevel, string message, LogDestination logDestination = LogDestination.Both, [CallerMemberName] string callerName = "undefined")
         {
-            if (!_models.TryGetValue(id, out var model))
+            if (!_applications.TryGetValue(id, out var model))
                 throw new ArgumentException($"The application with ID `{id}` was not registered.");
 
-            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel}] [{callerName}] [{model.Name}] {message}";
+            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel,-5}] [{callerName}] [{model.Name}] {message}";
 
-            if (logDestination == LogDestination.Console || logDestination == LogDestination.Both)
+            if (logDestination is LogDestination.Console or LogDestination.Both)
                 WriteToConsole(logLevel, formattedMessage);
 
-            if (logDestination == LogDestination.File || logDestination == LogDestination.Both)
+            if (logDestination is LogDestination.File or LogDestination.Both)
                 WriteToFile(model.FileName, formattedMessage);
         }
+        #endregion
 
+        #region (PRIVATE) METHOD-VOID | SetConsoleColor
+        /// <summary>
+        /// Sets the console color based on the log level.
+        /// </summary>
+        /// <param name="level">Log level.</param>
         private void SetConsoleColor(LogLevel level)
         {
             Console.ForegroundColor = level switch
@@ -36,36 +62,55 @@ namespace Bot.Utils.Logger
                 _ => ConsoleColor.White
             };
         }
+        #endregion
 
+        #region (PRIVATE) METHOD-VOID | WriteToConsole
+        /// <summary>
+        /// Writing text to the console.
+        /// </summary>
+        /// <param name="logLevel">Log level.</param>
+        /// <param name="message">Message.</param>
         private void WriteToConsole(LogLevel logLevel, string message)
         {
             lock (Console.Out)
             {
                 SetConsoleColor(logLevel);
                 Console.WriteLine(message);
-                Console.Clear();
+                Console.ResetColor();
             }
         }
+        #endregion
 
+        #region (PRIVATE) METHOD-VOID | WriteToFile
+        /// <summary>
+        /// Writing text to the file.
+        /// </summary>
+        /// <param name="fileName">File name.</param>
+        /// <param name="message"> Message.</param>
         private void WriteToFile(string fileName, string message)
         {
-            var fileLock = _fileLocks.GetOrAdd(fileName, _ => new object());
+            string fullPath = Path.GetFullPath(fileName);
+            var fileLock = _fileLocks.GetOrAdd(fullPath, _ => new object());
 
             lock (fileLock)
             {
                 try
                 {
-                    File.AppendAllText(fileName, message + Environment.NewLine);
+                    string? directory = Path.GetDirectoryName(fullPath);
+                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    File.AppendAllText(fullPath, message + Environment.NewLine);
                 }
                 catch (Exception ex)
                 {
-                    lock (Console.Out)
-                    {
-                        SetConsoleColor(LogLevel.Fatal);
-                        Console.WriteLine($"[Logger] Failed to write to file `{fileName}`. More details: {ex.Message}");
-                    }
+                    WriteToConsole(LogLevel.Fatal, $"[Logger] Failed to write to file `{fileName}`. More details: {ex.Message}");
                 }
             }
         }
+        #endregion
     }
+    #endregion
 }

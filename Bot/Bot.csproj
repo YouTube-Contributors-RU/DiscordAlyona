@@ -10,6 +10,7 @@
   <ItemGroup>
     <Folder Include="Events\" />
     <Folder Include="Services\" />
+    <Folder Include="Utils\Settings\" />
   </ItemGroup>
 
   <ItemGroup>
