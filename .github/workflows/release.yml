@@ -99,8 +99,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}
-          path: ./App-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+          name: AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}
+          path: ./AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
           retention-days: 1
 
   publish_release:
