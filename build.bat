@@ -1,3 +1,12 @@
+REM //== Copyright (C) 2026, YouTube Contributors and dmitriykotik. ==
+REM // Released under the MIT License.
+REM // 
+REM // This file is part of YouTube-Contributors-RU/DiscordBot.
+REM // This software is provided "AS IS", without warranty of any kind,
+REM // express or implied, including but not limited to warranties
+REM // of merchantability, fitness for a particular purpose and
+REM // noninfringement.
+
 @echo off
 chcp 65001 > nul
 setlocal enabledelayedexpansion
