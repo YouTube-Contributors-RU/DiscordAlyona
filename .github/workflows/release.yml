@@ -91,16 +91,16 @@ jobs:
       - run: dotnet publish --configuration ${{ matrix.configuration }} -r ${{ matrix.rid }} --self-contained false -o ./publish_output
 
       - if: matrix.os != 'windows-latest'
-        run: cd ./publish_output && zip -r ../AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip .
+        run: cd ./publish_output && zip -r ../DiscordAlyona-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip .
 
       - if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path .\publish_output\* -DestinationPath .\AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+        run: Compress-Archive -Path .\publish_output\* -DestinationPath .\DiscordAlyona-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
         shell: powershell
 
       - uses: actions/upload-artifact@v4
         with:
-          name: AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}
-          path: ./AppBot-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
+          name: DiscordAlyona-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}
+          path: ./DiscordAlyona-${{ needs.prepare.outputs.channel }}-${{ matrix.rid }}-${{ matrix.configuration }}.zip
           retention-days: 1
 
   publish_release:
