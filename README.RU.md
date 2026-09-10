@@ -1,8 +1,8 @@
-# DiscordBot (YouTube Contributors) | YTCDB.Bot
+# DiscordAlyona
 
 [English](README.EN.md)
 
-**DiscordBot** (YouTube Contributors RU) — Discord-бот для сообщества [YouTube Contributors RU](https://github.com/YouTube-Contributors-RU). Проект создаётся как основа для автоматизации задач сообщества и развития его Discord-сервера.
+**DiscordAlyona** — Discord-бот для сообщества [YouTube Contributors RU](https://github.com/YouTube-Contributors-RU). Проект создаётся как основа для автоматизации задач сообщества и развития его Discord-сервера.
 
 > Проект находится на ранней стадии разработки. Функции, взаимодействующие с Discord, ещё могут меняться и дополняться.
 
@@ -19,15 +19,15 @@
 ## Требования
 
 - [.NET SDK 8.0](https://dotnet.microsoft.com/download/dotnet/8.0);
-- Visual Studio Community (Вы можете обойтись и без этой IDE, но мы настоятельно рекомендуем её использовать.);
+- Visual Studio Community (Вы можете обойтись и без этой IDE, но мы настоятельно рекомендуем её использовать);
 - Windows, Linux или macOS;
 - Bash для использования `build.sh` либо `cmd.exe` для `build.bat`.
 
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/YouTube-Contributors-RU/DiscordBot.git
-cd DiscordBot
+git clone https://github.com/YouTube-Contributors-RU/DiscordAlyona.git
+cd DiscordAlyona
 dotnet run --project Bot/Bot.csproj
 ```
 

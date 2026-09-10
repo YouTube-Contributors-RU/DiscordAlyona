@@ -1,8 +1,8 @@
-# DiscordBot (YouTube Contributors) | YTCDB.Bot
+# DiscordAlyona
 
 [Русский](README.RU.md)
 
-**DiscordBot** (YouTube Contributors RU) is a Discord bot for the [YouTube Contributors RU](https://github.com/YouTube-Contributors-RU) community. The project is being built as a foundation for community automation and for developing its Discord server.
+**DiscordAlyona** is a Discord bot for the [YouTube Contributors RU](https://github.com/YouTube-Contributors-RU) community. The project is being built as a foundation for community automation and for developing its Discord server.
 
 > The project is at an early stage of development. Discord-facing functionality may still change and expand.
 
@@ -26,8 +26,8 @@
 ## Quick start
 
 ```bash
-git clone https://github.com/YouTube-Contributors-RU/DiscordBot.git
-cd DiscordBot
+git clone https://github.com/YouTube-Contributors-RU/DiscordAlyona.git
+cd DiscordAlyona
 dotnet run --project Bot/Bot.csproj
 ```
 
