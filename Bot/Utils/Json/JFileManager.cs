@@ -18,7 +18,7 @@ namespace Bot.Utils.Json
 
         #region METHOD-JFileManager | JFileManager
         /// <summary>
-        /// <see cref="JFileManager{T}">JFileManager</see> constructor.
+        /// <see cref="JFileManager{T}" /> constructor.
         /// </summary>
         /// <param name="jsonFile">Path to the Json file you are working with.</param>
         /// <param name="applicationSettings">Logger settings for the application.</param>

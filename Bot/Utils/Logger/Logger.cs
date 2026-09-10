@@ -10,8 +10,8 @@ namespace Bot.Utils.Logger
     // This is an implementation of the ILogger interface. Where it is, though... I have no idea.
 
     /// <summary>
-    /// <see cref="Logger">Logger</see> class constructor.
-    /// This is an implementation of the <see cref="ILogger">ILogger</see> interface. Where it is, though... I have no idea.
+    /// <see cref="Logger" /> class constructor.
+    /// This is an implementation of the <see cref="ILogger" /> interface. Where it is, though... I have no idea.
     /// </summary>
     /// <param name="applications">Dictionary with index and application model.</param>
     public class Logger(IDictionary<int, LoggerApplication> applications) : ILogger
@@ -28,14 +28,13 @@ namespace Bot.Utils.Logger
         /// <param name="message">Message.</param>
         /// <param name="logDestination">Log saving locations.</param>
         /// <param name="callerName">The method that called the log.</param>
-        /// <exception cref="ArgumentException">The exception that is thrown if the specified application ID does not exist.</exception>
         public void Log(int id, LogLevel logLevel, string message, LogDestination logDestination = LogDestination.Both, [CallerMemberName] string callerName = "undefined")
         {
             LoggerApplication? applicationModel;
             if (!_applications.TryGetValue(id, out applicationModel))
                 applicationModel = new() { Name = "undefined", FileName = "logs/undefined.log", Description = "The logger does not have an application configured with the specified ID." };
 
-            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel,-5}] [{callerName}] [{applicationModel.Name}] {message}";
+            string formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{logLevel}] [{callerName}] [{applicationModel.Name}] {message}";
 
             if (logDestination is LogDestination.Console or LogDestination.Both)
                 WriteToConsole(logLevel, formattedMessage);

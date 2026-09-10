@@ -18,7 +18,7 @@
         /// </summary>
         /// <param name="key">The variable into which the token must be entered.</param>
         /// <param name="token">Token.</param>
-        public void SaveToken(string key, string token);
+        public bool SetToken(string key, string token);
 
         /// <summary>
         /// Removes the token.

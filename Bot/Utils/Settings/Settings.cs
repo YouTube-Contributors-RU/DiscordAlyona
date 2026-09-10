@@ -1,9 +1,9 @@
 ﻿using Bot.Interfaces.Settings;
+using Bot.Macros.Logger;
 using Bot.Models.Logger;
 using Bot.Models.Settings;
 using Bot.Utils.Json;
 using Bot.Utils.Logger;
-using System.Runtime.CompilerServices;
 
 namespace Bot.Utils.Settings
 {
@@ -13,7 +13,8 @@ namespace Bot.Utils.Settings
     /// </summary>
     public class Settings : ISettings
     {
-        LoggerApplicationSettings? LoggerApplicationSettings;
+        private readonly string SettingsFile;
+        private readonly LoggerMacros? Logger;
         private readonly JFileManager<SettingsModel> JFileManager;
         private SettingsModel? SettingsModel = null;
 
@@ -23,11 +24,12 @@ namespace Bot.Utils.Settings
         /// </summary>
         /// <param name="settingsFile">Settings file.</param>
         /// <param name="applicationSettings">Settings class for the application logger.</param>
-        /// <param name="jFileManagerLoggerSettings">Settings class for the <see cref="JFileManager">JFileManager</see> application logger.</param>
+        /// <param name="jFileManagerLoggerSettings">Settings class for the <see cref="JFileManager" /> application logger.</param>
         public Settings(string settingsFile, LoggerApplicationSettings? applicationSettings, LoggerApplicationSettings? jFileManagerLoggerSettings)
         {
-            LoggerApplicationSettings = applicationSettings;
+            SettingsFile = settingsFile;
 
+            Logger = new(applicationSettings);
             JFileManager = new JFileManager<SettingsModel>(settingsFile, jFileManagerLoggerSettings);
             Load();
         }
@@ -42,17 +44,20 @@ namespace Bot.Utils.Settings
         {
             try
             {
+                if (!File.Exists(SettingsFile))
+                    JFileManager.Write(GenerateSampleModel());
+
                 SettingsModel = JFileManager.Read();
                 if (SettingsModel == null)
-                    Log(LogLevel.Warn, "Reading the settings file failed because it contains a null value. Please check the settings file.");
+                    Logger?.Log(LogLevel.Warn, "Reading the settings file failed because it contains a null value. Please check the settings file.");
                 else
-                    Log(LogLevel.Debug, "The settings file has been loaded successfully!");
+                    Logger?.Log(LogLevel.Debug, "The settings file has been loaded successfully!");
 
                 return SettingsModel != null;
             }
             catch (Exception ex)
             {
-                Log(LogLevel.Error, $"An unexpected error occurred while loading the settings file. More details: {ex.Message}");
+                Logger?.Log(LogLevel.Error, $"An unexpected error occurred while loading the settings file. More details: {ex.Message}");
                 return false;
             }
         }
@@ -80,23 +85,12 @@ namespace Bot.Utils.Settings
         }
         #endregion
 
-        #region (PRIVATE) METHOD-VOID | Log
-        /// <summary>
-        /// Private method for logging.
-        /// </summary>
-        /// <param name="logLevel">Logging level.</param>
-        /// <param name="message">Message.</param>
-        /// <param name="callerName">The method that called the log.</param>
-        private void Log(LogLevel logLevel, string message, [CallerMemberName] string callerName = "undefined")
-        {
-            if (LoggerApplicationSettings == null)
-                return;
-
-            var _logger = LoggerApplicationSettings.Logger;
-
-            _logger.Log(LoggerApplicationSettings.ApplicationId, logLevel, message, LoggerApplicationSettings.LogDestination, callerName);
-        }
-        #endregion
+        private SettingsModel GenerateSampleModel()
+            => new()
+            {
+                ApplicationName = "Application1",
+                DynamicVariables = new() { { "TestVariable", "TestValue" } }
+            };
     }
     #endregion
 }
